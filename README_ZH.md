@@ -1,25 +1,25 @@
-# fix-my-claw
+# 🦀 fix-my-claw
 
 [English](README.md)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue.svg)](#前置条件)
 
-一个开箱即用的 OpenClaw 守护与自动恢复工具。
+一个开箱即用的 OpenClaw 守护与自动恢复工具，让服务自己保持健康。
 
-## 效果与亮点
+## ✨ 效果与亮点
 
-- **自动自愈**：检测到异常后自动执行修复步骤。
-- **好排障**：每次异常会在 `~/.fix-my-claw/attempts/` 下保存带时间戳的现场产物。
-- **默认更稳**：修复冷却、每日次数限制、单实例锁，避免反复抖动。
-- **上服务器就能用**：内置 systemd 部署文件。
+- 🩹 **自动自愈**：检测到异常后自动执行修复步骤。
+- 🧾 **好排障**：每次异常会在 `~/.fix-my-claw/attempts/` 下保存带时间戳的现场产物。
+- 🧯 **默认更稳**：修复冷却、每日次数限制、单实例锁，避免反复抖动。
+- 🧷 **上服务器就能用**：内置 systemd 部署文件。
 
 - 一键启动：`fix-my-claw up`
 - 定时探测：`openclaw gateway health --json` + `openclaw gateway status --json`
 - 优先使用官方修复步骤（默认已内置）
 - 可选：Codex 辅助修复（默认关闭，且默认只允许改配置/workspace）
 
-## 快速开始（复制粘贴）
+## 🚀 快速开始（复制粘贴）
 
 ```bash
 python -m venv .venv
@@ -35,12 +35,12 @@ fix-my-claw up
 - 日志：`~/.fix-my-claw/fix-my-claw.log`
 - 产物：`~/.fix-my-claw/attempts/<timestamp>/`
 
-## 前置条件
+## ✅ 前置条件
 
 - Python 3.9+
 - 已安装 OpenClaw，并且 `openclaw` 可在 `PATH` 中直接调用
 
-## 常用命令
+## 🧰 常用命令
 
 ```bash
 fix-my-claw up      # 自动生成默认配置（如不存在）+ 启动常驻监控
@@ -50,7 +50,7 @@ fix-my-claw monitor # 常驻循环（要求配置已存在）
 fix-my-claw init    # 生成默认配置
 ```
 
-## 工作原理（概览）
+## 🧭 工作原理（概览）
 
 ```mermaid
 flowchart TD
@@ -64,7 +64,7 @@ flowchart TD
   G --> D
 ```
 
-## 配置
+## ⚙️ 配置
 
 所有设置都在一个 TOML 文件里：
 
@@ -73,7 +73,7 @@ flowchart TD
 
 提示：如果 systemd 环境下找不到 `openclaw`，请把 `[openclaw].command` 配成绝对路径。
 
-## 服务器部署（systemd）
+## 🖥️ 服务器部署（systemd）
 
 `deploy/systemd/` 提供两种方式：
 
@@ -91,7 +91,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now fix-my-claw.service
 ```
 
-## Codex 辅助修复（可选）
+## 🧩 Codex 辅助修复（可选）
 
 开启后会使用 Codex CLI 全程无确认执行。
 
@@ -99,7 +99,7 @@ sudo systemctl enable --now fix-my-claw.service
 - 第一阶段默认仅允许写：OpenClaw 配置/状态目录、workspace、以及 fix-my-claw 自己的 state 目录
 - 第二阶段默认关闭（`ai.allow_code_changes=false`）
 
-## 常见问题
+## 🩺 常见问题
 
 - 提示 `command not found: openclaw`
   - 确保已安装 OpenClaw，且 `openclaw` 在 `PATH` 中（systemd 环境下尤其常见）。
@@ -108,10 +108,10 @@ sudo systemctl enable --now fix-my-claw.service
   - 通过 `[monitor].state_dir` 下的 lock 文件避免并发修复互相影响。
   - 如怀疑 lock 残留，请先确认没有实例运行，再删除 lock 文件。
 
-## 参与贡献
+## 🤝 参与贡献
 
 见 `CONTRIBUTING.md`、`CODE_OF_CONDUCT.md` 与 `SECURITY.md`。
 
-## 开源协议
+## 📄 开源协议
 
 MIT License，见 `LICENSE`。

@@ -1,25 +1,25 @@
-# fix-my-claw
+# 🦀 fix-my-claw
 
 [中文](README_ZH.md)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue.svg)](#requirements)
 
-A plug-and-play watchdog for OpenClaw.
+A plug-and-play watchdog for OpenClaw — keep it healthy automatically.
 
-## Highlights
+## ✨ Highlights
 
-- **Auto-heal**: detects unhealthy states and runs recovery steps automatically.
-- **Operator-friendly**: writes a timestamped incident folder under `~/.fix-my-claw/attempts/` for debugging.
-- **Safe defaults**: repair cooldown + daily attempt limits + single-instance lock to avoid flapping.
-- **Service-ready**: ships with systemd units for servers.
+- 🩹 **Auto-heal**: detects unhealthy states and runs recovery steps automatically.
+- 🧾 **Operator-friendly**: writes a timestamped incident folder under `~/.fix-my-claw/attempts/` for debugging.
+- 🧯 **Safe defaults**: repair cooldown + daily attempt limits + single-instance lock to avoid flapping.
+- 🧷 **Service-ready**: ships with systemd units for servers.
 
 - One command to start: `fix-my-claw up`
 - Probes `openclaw gateway health --json` + `openclaw gateway status --json`
 - Recovers using your official steps (defaults included)
 - Optional: Codex-assisted remediation for stubborn cases (off by default, restricted by default)
 
-## Quick start (copy/paste)
+## 🚀 Quick start (copy/paste)
 
 ```bash
 python -m venv .venv
@@ -35,12 +35,12 @@ Default paths:
 - Logs: `~/.fix-my-claw/fix-my-claw.log`
 - Attempts: `~/.fix-my-claw/attempts/<timestamp>/`
 
-## Requirements
+## ✅ Requirements
 
 - Python 3.9+
 - OpenClaw installed and available as `openclaw` in `PATH`
 
-## Common workflows
+## 🧰 Commands
 
 ```bash
 fix-my-claw up      # init (if needed) + monitor
@@ -50,7 +50,7 @@ fix-my-claw monitor # long-running loop (requires config)
 fix-my-claw init    # write default config
 ```
 
-## How it works (high-level)
+## 🧭 How it works (high-level)
 
 ```mermaid
 flowchart TD
@@ -64,7 +64,7 @@ flowchart TD
   G --> D
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 All settings live in a single TOML file.
 
@@ -73,7 +73,7 @@ All settings live in a single TOML file.
 
 Tip: if `openclaw` isn’t on `PATH` under systemd, set `[openclaw].command` to an absolute path.
 
-## Run it on a server (systemd)
+## 🖥️ Run it on a server (systemd)
 
 Two options in `deploy/systemd/`:
 
@@ -91,7 +91,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now fix-my-claw.service
 ```
 
-## Codex-assisted remediation (optional)
+## 🧩 Codex-assisted remediation (optional)
 
 When enabled, `fix-my-claw` runs Codex CLI non-interactively.
 
@@ -99,7 +99,7 @@ When enabled, `fix-my-claw` runs Codex CLI non-interactively.
 - Stage 1 is restricted to OpenClaw config/state + workspace + fix-my-claw state directory.
 - Stage 2 is disabled by default (`ai.allow_code_changes=false`).
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 - `command not found: openclaw`
   - Ensure OpenClaw is installed and `openclaw` is on `PATH` (especially under systemd).
@@ -108,10 +108,10 @@ When enabled, `fix-my-claw` runs Codex CLI non-interactively.
   - A lock file in `[monitor].state_dir` prevents concurrent repairs.
   - If you believe it’s stale, confirm no instance is running, then remove the lock file.
 
-## Contributing
+## 🤝 Contributing
 
 See `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
 
-## License
+## 📄 License
 
 MIT, see `LICENSE`.
