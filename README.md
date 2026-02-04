@@ -7,6 +7,16 @@
 
 A plug-and-play watchdog for OpenClaw — keep it healthy automatically.
 
+Already have OpenClaw installed? Drop this repo on the same machine (next to OpenClaw is fine) and start it with `nohup`:
+
+```bash
+cd /path/to/fix-my-claw
+python -m venv .venv
+source .venv/bin/activate
+pip install .
+nohup fix-my-claw up > ~/.fix-my-claw/nohup.out 2>&1 &
+```
+
 ## ✨ Highlights
 
 - 🩹 **Auto-heal**: detects unhealthy states and runs recovery steps automatically.
@@ -19,7 +29,7 @@ A plug-and-play watchdog for OpenClaw — keep it healthy automatically.
 - Recovers using your official steps (defaults included)
 - Optional: Codex-assisted remediation for stubborn cases (off by default, restricted by default)
 
-## 🚀 Quick start (copy/paste)
+## 🚀 Quick start
 
 ```bash
 python -m venv .venv

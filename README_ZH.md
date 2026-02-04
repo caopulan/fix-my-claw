@@ -7,6 +7,16 @@
 
 一个开箱即用的 OpenClaw 守护与自动恢复工具，让服务自己保持健康。
 
+如果你是在服务器上直接安装 OpenClaw，把这个 repo 放到同一台机器上（放在 OpenClaw 目录旁边即可），然后用 `nohup` 后台启动：
+
+```bash
+cd /path/to/fix-my-claw
+python -m venv .venv
+source .venv/bin/activate
+pip install .
+nohup fix-my-claw up > ~/.fix-my-claw/nohup.out 2>&1 &
+```
+
 ## ✨ 效果与亮点
 
 - 🩹 **自动自愈**：检测到异常后自动执行修复步骤。
@@ -19,7 +29,7 @@
 - 优先使用官方修复步骤（默认已内置）
 - 可选：Codex 辅助修复（默认关闭，且默认只允许改配置/workspace）
 
-## 🚀 快速开始（复制粘贴）
+## 🚀 快速开始
 
 ```bash
 python -m venv .venv
