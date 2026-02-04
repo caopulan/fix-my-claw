@@ -27,7 +27,7 @@ step_timeout_seconds = 600
 post_step_wait_seconds = 2
 
 [ai]
-# AI is powerful and risky; enable only if you accept unattended agent execution.
+# Codex-assisted remediation is powerful and risky; enable only if you accept unattended execution.
 enabled = false
 provider = "codex"
 command = "codex"

@@ -2,15 +2,23 @@
 
 [中文](README_ZH.md)
 
-`fix-my-claw` is a 24/7 watchdog + self-healing tool for OpenClaw:
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue.svg)](#requirements)
 
-1. **Probe periodically**: runs `openclaw gateway health --json` and `openclaw gateway status --json` on an interval.
-2. **Official repair first**: if unhealthy, runs OpenClaw official repair steps (default: `openclaw doctor --repair` then `openclaw gateway restart`).
-3. **AI fallback (optional)**: if official steps still fail, runs **Codex CLI** in fully non-interactive mode.
-   - By default it is restricted to only modify **OpenClaw config/state dir** and **workspace dir**.
-   - Only if you explicitly set `ai.allow_code_changes=true`, it will enter a second stage that may modify broader files/code.
+24/7 watchdog + automated recovery for OpenClaw.
 
-> Warning: AI-assisted repair is equivalent to unattended “run commands + edit files”. Run it in a controlled environment and keep backups.
+## What it does
+
+- **Continuous health checks**: probes `openclaw gateway health --json` and `openclaw gateway status --json`.
+- **Official recovery first**: runs your configured “official” steps (defaults to `openclaw doctor --repair` then `openclaw gateway restart`).
+- **Optional Codex-assisted remediation**: if official steps still fail, runs Codex CLI non-interactively to apply safe, minimal fixes.
+  - By default it is restricted to only write **OpenClaw config/state dir** and **workspace dir**.
+  - Only if you explicitly set `ai.allow_code_changes=true`, it can enter a second stage with broader permissions.
+
+## Requirements
+
+- Python 3.9+
+- OpenClaw installed and available as `openclaw` in `PATH`
 
 ## Quick start
 
@@ -28,9 +36,9 @@ pip install .
 fix-my-claw up
 ```
 
-This creates a default config at `~/.fix-my-claw/config.toml` (if missing) and starts the monitor loop.
+Default config path: `~/.fix-my-claw/config.toml`.
 
-### 3) Configure (optional)
+### 3) Configure
 
 ```bash
 mkdir -p ~/.fix-my-claw
@@ -45,14 +53,55 @@ fix-my-claw repair
 fix-my-claw monitor
 ```
 
-## systemd
+## How it works
+
+```mermaid
+flowchart TD
+  A["timer / monitor loop"] --> B["health probe"]
+  B --> C["status probe"]
+  C -->|healthy| D["sleep"]
+  C -->|unhealthy| E["official recovery steps"]
+  E --> F{"healthy?"}
+  F -->|yes| D
+  F -->|no| G["Codex-assisted remediation (optional)"]
+  G --> D
+```
+
+## Configuration
+
+All settings live in a single TOML file (default: `~/.fix-my-claw/config.toml`).
+
+- `fix-my-claw init` writes a default config (use `--force` to overwrite).
+- `fix-my-claw up` writes the default config if it doesn’t exist, then starts `monitor`.
+
+Key sections:
+
+- `[monitor]`: interval, timeouts, log file, state directory
+- `[openclaw]`: `openclaw` command path and probe arguments
+- `[repair]`: official recovery steps and step timeout
+- `[ai]`: Codex CLI command/args and safety limits (optional)
+
+See `examples/fix-my-claw.toml` for a complete example.
+
+## Running as a service (systemd)
 
 Copy files from `deploy/systemd/`:
 
 - Option A (recommended): `fix-my-claw.service` runs a long-lived monitor loop.
 - Option B: `fix-my-claw-oneshot.service` + `fix-my-claw.timer` runs `fix-my-claw repair` periodically (cron-style).
 
-## Non-interactive AI fallback
+Example (Option A):
+
+```bash
+sudo mkdir -p /etc/fix-my-claw
+sudo cp examples/fix-my-claw.toml /etc/fix-my-claw/config.toml
+
+sudo cp deploy/systemd/fix-my-claw.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now fix-my-claw.service
+```
+
+## Codex-assisted remediation (optional)
 
 ### Codex CLI
 
@@ -63,6 +112,29 @@ Stage 1 uses `-s workspace-write` and `--add-dir` to restrict write access to:
 - `openclaw.workspace_dir`
 - `openclaw.state_dir`
 - `monitor.state_dir`
+
+Stage 2 (disabled by default) is controlled by `ai.allow_code_changes`. Keep it off unless you fully understand the blast radius.
+
+## Files & logs
+
+- Log file: `~/.fix-my-claw/fix-my-claw.log` (configurable)
+- State: `~/.fix-my-claw/state.json` (cooldowns/attempt counters)
+- Attempt artifacts: `~/.fix-my-claw/attempts/<timestamp>/` (probe outputs + recovery outputs)
+
+## Troubleshooting
+
+- `command not found: openclaw`
+  - Ensure OpenClaw is installed and `openclaw` is on `PATH` (especially under systemd).
+  - Alternatively set `[openclaw].command` to an absolute path.
+- `another fix-my-claw instance is running`
+  - `fix-my-claw` uses a lock file under `[monitor].state_dir` to avoid concurrent repairs.
+  - If the process crashed, remove the lock file only after confirming no instance is running.
+- `permission denied`
+  - Run `fix-my-claw` under the same user as OpenClaw, and ensure it can write to `[monitor].state_dir`.
+
+## Contributing
+
+See `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
 
 ## License
 
