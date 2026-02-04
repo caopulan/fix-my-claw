@@ -658,11 +658,23 @@ def _probe_is_healthy(cfg: AppConfig) -> bool:
 
 
 def _run_official_steps(cfg: AppConfig, attempt_dir: Path) -> list[dict]:
+    repair_log = logging.getLogger("fix_my_claw.repair")
     results: list[dict] = []
+    total = len(cfg.repair.official_steps)
     for idx, step in enumerate(cfg.repair.official_steps, start=1):
         argv = [cfg.openclaw.command if step and step[0] == "openclaw" else step[0], *step[1:]]
+        repair_log.warning("official step %d/%d: %s", idx, total, " ".join(argv))
         cwd = cfg.openclaw.workspace_dir if cfg.openclaw.workspace_dir.exists() else None
         res = run_cmd(argv, timeout_seconds=cfg.repair.step_timeout_seconds, cwd=cwd)
+        repair_log.warning(
+            "official step %d/%d done: exit=%s duration_ms=%s",
+            idx,
+            total,
+            res.exit_code,
+            res.duration_ms,
+        )
+        if res.stderr:
+            repair_log.info("official step %d/%d stderr: %s", idx, total, truncate_for_log(res.stderr))
         _write_attempt_file(attempt_dir, f"official.{idx}.stdout.txt", redact_text(res.stdout))
         _write_attempt_file(attempt_dir, f"official.{idx}.stderr.txt", redact_text(res.stderr))
         results.append(
@@ -676,6 +688,7 @@ def _run_official_steps(cfg: AppConfig, attempt_dir: Path) -> list[dict]:
         )
         time.sleep(cfg.repair.post_step_wait_seconds)
         if _probe_is_healthy(cfg):
+            repair_log.warning("OpenClaw is healthy after official step %d/%d", idx, total)
             break
     return results
 
@@ -735,37 +748,56 @@ def _run_ai_repair(cfg: AppConfig, attempt_dir: Path, *, code_stage: bool) -> Cm
 
 
 def attempt_repair(cfg: AppConfig, store: StateStore, *, force: bool) -> RepairResult:
+    repair_log = logging.getLogger("fix_my_claw.repair")
     if _probe_is_healthy(cfg):
+        repair_log.info("repair skipped: already healthy")
         return RepairResult(attempted=False, fixed=True, used_ai=False, details={"already_healthy": True})
 
     if not cfg.repair.enabled:
+        repair_log.warning("repair skipped: disabled by config")
         return RepairResult(attempted=False, fixed=False, used_ai=False, details={"repair_disabled": True})
 
     if not store.can_attempt_repair(cfg.monitor.repair_cooldown_seconds, force=force):
-        return RepairResult(attempted=False, fixed=False, used_ai=False, details={"cooldown": True})
+        details: dict[str, object] = {"cooldown": True}
+        state = store.load()
+        if state.last_repair_ts is not None:
+            elapsed = _now_ts() - state.last_repair_ts
+            remaining = max(0, cfg.monitor.repair_cooldown_seconds - elapsed)
+            details["cooldown_remaining_seconds"] = remaining
+            repair_log.info("repair skipped: cooldown (%ss remaining)", remaining)
+        else:
+            repair_log.info("repair skipped: cooldown")
+        return RepairResult(attempted=False, fixed=False, used_ai=False, details=details)
 
     store.mark_repair_attempt()
     attempt_dir = _attempt_dir(cfg)
     details: dict = {"attempt_dir": str(attempt_dir.resolve())}
+    repair_log.warning("starting repair attempt: dir=%s", attempt_dir.resolve())
 
     details["context_before"] = _collect_context(cfg, attempt_dir)
     details["official"] = _run_official_steps(cfg, attempt_dir)
     details["context_after_official"] = _collect_context(cfg, attempt_dir)
 
     if _probe_is_healthy(cfg):
+        repair_log.warning("recovered by official steps: dir=%s", attempt_dir.resolve())
         return RepairResult(attempted=True, fixed=True, used_ai=False, details=details)
 
     used_ai = False
-    if cfg.ai.enabled and store.can_attempt_ai(
+    if not cfg.ai.enabled:
+        repair_log.info("Codex-assisted remediation disabled; leaving OpenClaw unhealthy")
+    elif not store.can_attempt_ai(
         max_attempts_per_day=cfg.ai.max_attempts_per_day,
         cooldown_seconds=cfg.ai.cooldown_seconds,
     ):
+        repair_log.warning("Codex-assisted remediation skipped (rate limit / cooldown)")
+    else:
         store.mark_ai_attempt()
         used_ai = True
         details["ai_stage"] = "config"
         details["ai_result_config"] = _run_ai_repair(cfg, attempt_dir, code_stage=False).__dict__
         details["context_after_ai_config"] = _collect_context(cfg, attempt_dir)
         if _probe_is_healthy(cfg):
+            repair_log.warning("recovered by Codex-assisted remediation: dir=%s", attempt_dir.resolve())
             return RepairResult(attempted=True, fixed=True, used_ai=True, details=details)
 
         if cfg.ai.allow_code_changes:
@@ -774,19 +806,42 @@ def attempt_repair(cfg: AppConfig, store: StateStore, *, force: bool) -> RepairR
             details["context_after_ai_code"] = _collect_context(cfg, attempt_dir)
 
     fixed = _probe_is_healthy(cfg)
+    repair_log.warning(
+        "repair attempt finished: fixed=%s used_codex=%s dir=%s",
+        fixed,
+        used_ai,
+        attempt_dir.resolve(),
+    )
     return RepairResult(attempted=True, fixed=fixed, used_ai=used_ai, details=details)
 
 
 def monitor_loop(cfg: AppConfig, store: StateStore) -> None:
-    logging.getLogger("fix_my_claw.watchdog").info("starting monitor loop: interval=%ss", cfg.monitor.interval_seconds)
+    wd_log = logging.getLogger("fix_my_claw.watchdog")
+    wd_log.info("starting monitor loop: interval=%ss", cfg.monitor.interval_seconds)
     while True:
         try:
             result = run_check(cfg, store)
             if not result.healthy:
-                logging.getLogger("fix_my_claw.watchdog").warning("unhealthy; attempting repair")
-                attempt_repair(cfg, store, force=False)
+                wd_log.warning(
+                    "unhealthy: health_exit=%s status_exit=%s; attempting repair",
+                    result.health.get("exit_code"),
+                    result.status.get("exit_code"),
+                )
+                rr = attempt_repair(cfg, store, force=False)
+                if rr.attempted:
+                    wd_log.warning(
+                        "repair finished: fixed=%s used_codex=%s dir=%s",
+                        rr.fixed,
+                        rr.used_ai,
+                        rr.details.get("attempt_dir"),
+                    )
+                elif rr.details.get("cooldown"):
+                    remaining = rr.details.get("cooldown_remaining_seconds")
+                    wd_log.info("repair skipped: cooldown (%ss remaining)", remaining if remaining is not None else "?")
+                else:
+                    wd_log.info("repair skipped: %s", rr.details)
         except Exception as e:
-            logging.getLogger("fix_my_claw.watchdog").exception("monitor loop error: %s", e)
+            wd_log.exception("monitor loop error: %s", e)
         time.sleep(cfg.monitor.interval_seconds)
 
 
@@ -911,4 +966,3 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     code = args.func(args)
     raise SystemExit(code)
-
