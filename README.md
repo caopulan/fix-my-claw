@@ -7,15 +7,9 @@
 
 A plug-and-play watchdog for OpenClaw — keep it healthy automatically.
 
-Already have OpenClaw installed? Drop this repo on the same machine (next to OpenClaw is fine) and start it with `nohup`:
+Copy this line to your OpenClaw host to enable fix-my-claw:
 
-```bash
-cd /path/to/fix-my-claw
-python -m venv .venv
-source .venv/bin/activate
-pip install .
-nohup fix-my-claw up > ~/.fix-my-claw/nohup.out 2>&1 &
-```
+```Install https://github.com/caopulan/fix-my-claw, run fix-my-claw up via nohup```
 
 ## ✨ Highlights
 

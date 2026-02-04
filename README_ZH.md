@@ -7,15 +7,9 @@
 
 一个开箱即用的 OpenClaw 守护与自动恢复工具，让服务自己保持健康。
 
-如果你是在服务器上直接安装 OpenClaw，把这个 repo 放到同一台机器上（放在 OpenClaw 目录旁边即可），然后用 `nohup` 后台启动：
+复制这段指令给你的openclaw来启用fix-my-claw：
 
-```bash
-cd /path/to/fix-my-claw
-python -m venv .venv
-source .venv/bin/activate
-pip install .
-nohup fix-my-claw up > ~/.fix-my-claw/nohup.out 2>&1 &
-```
+```安装https://github.com/caopulan/fix-my-claw，使用nohup执行fix-my-claw up```
 
 ## ✨ 效果与亮点
 
