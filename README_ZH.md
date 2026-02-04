@@ -6,7 +6,7 @@
 
 1. **定时探测**：周期性执行 `openclaw gateway health --json` 与 `openclaw gateway status --json`（可配置）。
 2. **官方修复优先**：失败时先跑 OpenClaw 官方修复手段（默认：`openclaw doctor --repair` + `openclaw gateway restart`，可配置）。
-3. **AI 兜底（可选）**：官方手段仍失败，再调用 **Codex CLI** 或 **Claude Code** 自动修复。
+3. **AI 兜底（可选）**：官方手段仍失败，再调用 **Codex CLI** 自动修复。
    - 默认严格限制：只允许改 **OpenClaw 配置目录** + **workspace 目录**（符合“优先修复配置和 workspace 文件”的要求）。
    - 若你显式开启 `ai.allow_code_changes=true`，才会进入更高权限的第二阶段（可能改动更多文件）。
 
@@ -65,10 +65,6 @@ fix-my-claw monitor
 - `openclaw.workspace_dir`
 - `openclaw.state_dir`
 - `monitor.state_dir`
-
-### Claude Code
-
-Claude Code 的参数与非交互模式因版本而异，本项目将其作为“可配置命令”处理；你需要在配置里把 `ai.command/ai.args` 配好。
 
 ## 目录结构（默认）
 

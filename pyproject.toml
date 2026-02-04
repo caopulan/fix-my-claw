@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fix-my-claw"
 version = "0.1.0"
-description = "24/7 OpenClaw watchdog: probe health/status, run official repairs, then (optionally) AI-assisted repair via Codex/Claude Code."
+description = "24/7 OpenClaw watchdog: probe health/status, run official repairs, then (optionally) AI-assisted repair via Codex CLI."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [{ name = "fix-my-claw contributors" }]
-keywords = ["openclaw", "watchdog", "monitoring", "self-heal", "codex", "claude"]
+keywords = ["openclaw", "watchdog", "monitoring", "self-heal", "codex"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: MIT License",

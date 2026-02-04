@@ -6,7 +6,7 @@
 
 1. **Probe periodically**: runs `openclaw gateway health --json` and `openclaw gateway status --json` on an interval.
 2. **Official repair first**: if unhealthy, runs OpenClaw official repair steps (default: `openclaw doctor --repair` then `openclaw gateway restart`).
-3. **AI fallback (optional)**: if official steps still fail, runs **Codex CLI** or **Claude Code** in fully non-interactive mode.
+3. **AI fallback (optional)**: if official steps still fail, runs **Codex CLI** in fully non-interactive mode.
    - By default it is restricted to only modify **OpenClaw config/state dir** and **workspace dir**.
    - Only if you explicitly set `ai.allow_code_changes=true`, it will enter a second stage that may modify broader files/code.
 
@@ -63,10 +63,6 @@ Stage 1 uses `-s workspace-write` and `--add-dir` to restrict write access to:
 - `openclaw.workspace_dir`
 - `openclaw.state_dir`
 - `monitor.state_dir`
-
-### Claude Code
-
-Claude Code’s non-interactive flags vary by version, so this project treats it as a configurable command (`ai.command` + `ai.args`).
 
 ## License
 
