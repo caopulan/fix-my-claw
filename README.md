@@ -1,18 +1,20 @@
 # fix-my-claw
 
-一个 7×24 无人值守的 OpenClaw 守护/自愈工具：
+[中文](README_ZH.md)
 
-1. **定时探测**：周期性执行 `openclaw gateway health --json` 与 `openclaw gateway status --json`（可配置）。
-2. **官方修复优先**：失败时先跑 OpenClaw 官方修复手段（默认：`openclaw doctor --repair` + `openclaw gateway restart`，可配置）。
-3. **AI 兜底（可选）**：官方手段仍失败，再调用 **Codex CLI** 或 **Claude Code** 自动修复。
-   - 默认严格限制：只允许改 **OpenClaw 配置目录** + **workspace 目录**（符合“优先修复配置和 workspace 文件”的要求）。
-   - 若你显式开启 `ai.allow_code_changes=true`，才会进入更高权限的第二阶段（可能改动更多文件）。
+`fix-my-claw` is a 24/7 watchdog + self-healing tool for OpenClaw:
 
-> 免责声明：AI 自动修复功能本质上等同于“自动执行 shell + 改文件”。请务必在隔离环境/受控账号下运行，并设置合理的目录权限与备份策略。
+1. **Probe periodically**: runs `openclaw gateway health --json` and `openclaw gateway status --json` on an interval.
+2. **Official repair first**: if unhealthy, runs OpenClaw official repair steps (default: `openclaw doctor --repair` then `openclaw gateway restart`).
+3. **AI fallback (optional)**: if official steps still fail, runs **Codex CLI** or **Claude Code** in fully non-interactive mode.
+   - By default it is restricted to only modify **OpenClaw config/state dir** and **workspace dir**.
+   - Only if you explicitly set `ai.allow_code_changes=true`, it will enter a second stage that may modify broader files/code.
 
-## 快速开始
+> Warning: AI-assisted repair is equivalent to unattended “run commands + edit files”. Run it in a controlled environment and keep backups.
 
-### 1) 安装
+## Quick start
+
+### 1) Install
 
 ```bash
 python -m venv .venv
@@ -20,37 +22,43 @@ source .venv/bin/activate
 pip install .
 ```
 
-### 2) 配置
+### 2) One-command start (recommended)
 
-复制示例配置并按需修改：
+```bash
+fix-my-claw up
+```
+
+This creates a default config at `~/.fix-my-claw/config.toml` (if missing) and starts the monitor loop.
+
+### 3) Configure (optional)
 
 ```bash
 mkdir -p ~/.fix-my-claw
 cp examples/fix-my-claw.toml ~/.fix-my-claw/config.toml
 ```
 
-### 3) 单次检查 / 修复 / 监控
+### 4) Run
 
 ```bash
-fix-my-claw check  --config ~/.fix-my-claw/config.toml
-fix-my-claw repair --config ~/.fix-my-claw/config.toml
-fix-my-claw monitor --config ~/.fix-my-claw/config.toml
+fix-my-claw check
+fix-my-claw repair
+fix-my-claw monitor
 ```
 
-## systemd（推荐）
+## systemd
 
-将 `deploy/systemd/*` 拷贝到你的服务器：
+Copy files from `deploy/systemd/`:
 
-- 方式 A：`fix-my-claw.service`（长驻进程）：每隔 `interval_seconds` 探测并自愈
-- 方式 B：`fix-my-claw-oneshot.service` + `fix-my-claw.timer`（cron 风格）：定时跑一次 `fix-my-claw repair`
+- Option A (recommended): `fix-my-claw.service` runs a long-lived monitor loop.
+- Option B: `fix-my-claw-oneshot.service` + `fix-my-claw.timer` runs `fix-my-claw repair` periodically (cron-style).
 
-## AI 兜底的非交互模式
+## Non-interactive AI fallback
 
 ### Codex CLI
 
-默认配置使用 `codex exec`，并通过 `-c approval_policy="never"` 来确保无确认提示。
+The default config uses `codex exec` with `approval_policy="never"` so it never prompts for confirmation.
 
-同时在第一阶段使用 `-s workspace-write`，配合 `--add-dir` 仅允许写：
+Stage 1 uses `-s workspace-write` and `--add-dir` to restrict write access to:
 
 - `openclaw.workspace_dir`
 - `openclaw.state_dir`
@@ -58,20 +66,8 @@ fix-my-claw monitor --config ~/.fix-my-claw/config.toml
 
 ### Claude Code
 
-Claude Code 的参数与非交互模式因版本而异，本项目将其作为“可配置命令”处理；你需要在配置里把 `ai.command/ai.args` 配好。
+Claude Code’s non-interactive flags vary by version, so this project treats it as a configurable command (`ai.command` + `ai.args`).
 
-## 目录结构（默认）
+## License
 
-- `~/.fix-my-claw/`：本工具的 state、日志、修复尝试产物
-- `~/.openclaw/`：OpenClaw 的配置与数据目录（可配置）
-- `~/.openclaw/workspace/`：OpenClaw workspace（可配置）
-
-## 开源协议
-
-MIT License，见 `LICENSE`。
-
-## 运行测试
-
-```bash
-python -m unittest discover -s tests -p 'test_*.py' -v
-```
+MIT, see `LICENSE`.

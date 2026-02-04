@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.scripts]
-fix-my-claw = "fix_my_claw.cli:main"
+fix-my-claw = "fix_my_claw.core:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -37,4 +37,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 fix_my_claw = ["prompts/*.md"]
-
