@@ -1,0 +1,14 @@
+[Unit]
+Description=fix-my-claw OpenClaw watchdog (oneshot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+# Run as the same user that runs OpenClaw (recommended).
+# User=openclaw
+
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/env fix-my-claw repair --config /etc/fix-my-claw/config.toml
+

@@ -1,0 +1,10 @@
+[Unit]
+Description=fix-my-claw timer (oneshot repair loop)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=fix-my-claw-oneshot.service
+
+[Install]
+WantedBy=timers.target

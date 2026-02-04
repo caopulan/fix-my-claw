@@ -1,0 +1,56 @@
+[monitor]
+interval_seconds = 60
+probe_timeout_seconds = 15
+repair_cooldown_seconds = 300
+state_dir = "~/.fix-my-claw"
+log_file = "~/.fix-my-claw/fix-my-claw.log"
+log_level = "INFO"
+
+[openclaw]
+command = "openclaw"
+state_dir = "~/.openclaw"
+workspace_dir = "~/.openclaw/workspace"
+health_args = ["gateway", "health", "--json"]
+status_args = ["gateway", "status", "--json"]
+logs_args = ["logs", "--tail", "200"]
+
+[repair]
+enabled = true
+# Default official steps:
+# 1) `openclaw doctor --repair` (fixes common config/workspace issues)
+# 2) `openclaw gateway restart` (restart supervised gateway service)
+official_steps = [
+  ["openclaw", "doctor", "--repair"],
+  ["openclaw", "gateway", "restart"],
+]
+step_timeout_seconds = 600
+post_step_wait_seconds = 2
+
+[ai]
+# AI is powerful and risky; enable only if you accept unattended agent execution.
+enabled = false
+provider = "codex"
+command = "codex"
+# Stage 1: allow ONLY workspace + openclaw state dir + fix-my-claw dir (workspace-write sandbox).
+args = [
+  "exec",
+  "-s", "workspace-write",
+  "-c", "approval_policy=\"never\"",
+  "--skip-git-repo-check",
+  "-C", "$workspace_dir",
+  "--add-dir", "$openclaw_state_dir",
+  "--add-dir", "$monitor_state_dir",
+]
+model = "gpt-5.2"
+timeout_seconds = 1800
+max_attempts_per_day = 2
+cooldown_seconds = 3600
+# Stage 2: only if you want to allow code/installation changes.
+allow_code_changes = false
+args_code = [
+  "exec",
+  "-s", "danger-full-access",
+  "-c", "approval_policy=\"never\"",
+  "--skip-git-repo-check",
+  "-C", "$workspace_dir",
+]
