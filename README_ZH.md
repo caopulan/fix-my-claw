@@ -7,6 +7,13 @@
 
 一个开箱即用的 OpenClaw 守护与自动恢复工具。
 
+## 效果与亮点
+
+- **自动自愈**：检测到异常后自动执行修复步骤。
+- **好排障**：每次异常会在 `~/.fix-my-claw/attempts/` 下保存带时间戳的现场产物。
+- **默认更稳**：修复冷却、每日次数限制、单实例锁，避免反复抖动。
+- **上服务器就能用**：内置 systemd 部署文件。
+
 - 一键启动：`fix-my-claw up`
 - 定时探测：`openclaw gateway health --json` + `openclaw gateway status --json`
 - 优先使用官方修复步骤（默认已内置）
@@ -108,4 +115,3 @@ sudo systemctl enable --now fix-my-claw.service
 ## 开源协议
 
 MIT License，见 `LICENSE`。
-

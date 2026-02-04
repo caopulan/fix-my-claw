@@ -7,6 +7,13 @@
 
 A plug-and-play watchdog for OpenClaw.
 
+## Highlights
+
+- **Auto-heal**: detects unhealthy states and runs recovery steps automatically.
+- **Operator-friendly**: writes a timestamped incident folder under `~/.fix-my-claw/attempts/` for debugging.
+- **Safe defaults**: repair cooldown + daily attempt limits + single-instance lock to avoid flapping.
+- **Service-ready**: ships with systemd units for servers.
+
 - One command to start: `fix-my-claw up`
 - Probes `openclaw gateway health --json` + `openclaw gateway status --json`
 - Recovers using your official steps (defaults included)
@@ -108,4 +115,3 @@ See `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
 ## License
 
 MIT, see `LICENSE`.
-
